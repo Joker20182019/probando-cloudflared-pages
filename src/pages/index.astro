@@ -3,48 +3,434 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+// Podrías cambiar el título y descripción en consts para reflejar la tienda
+const storeTitle = 'Squirrel Store';
+const storeDescription = 'Tienda online de productos exclusivos para ardillas modernas';
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="es">
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<BaseHead title={storeTitle} description={storeDescription} />
 	</head>
 	<body>
 		<Header />
 		<main>
-			<h1>🧑‍🚀 Hello, Squirrel</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+			<section class="hero">
+				<h1>🐿️ Bienvenido a Squirrel Store</h1>
+				<p>Los mejores productos para tu día a día, con estilo y calidad.</p>
+			</section>
+
+			<section class="products">
+				<h2>Nuestros productos</h2>
+				<div class="product-grid" id="productGrid">
+					<!-- Los productos se renderizan desde el cliente con JavaScript -->
+				</div>
+			</section>
+
+			<section class="cart-section">
+				<button id="viewCartBtn" class="btn-cart">🛒 Ver carrito (<span id="cartCount">0</span>)</button>
+				<div id="cartModal" class="modal hidden">
+					<div class="modal-content">
+						<span class="close" id="closeCart">&times;</span>
+						<h2>Tu carrito</h2>
+						<ul id="cartItems"></ul>
+						<p><strong>Total: $<span id="cartTotal">0.00</span></strong></p>
+						<button id="checkoutBtn" class="btn-pay">💳 Pagar con tarjeta</button>
+					</div>
+				</div>
+			</section>
+
+			<!-- Modal de pago -->
+			<div id="paymentModal" class="modal hidden">
+				<div class="modal-content">
+					<span class="close" id="closePayment">&times;</span>
+					<h2>💳 Pago con tarjeta</h2>
+					<form id="paymentForm">
+						<div class="form-group">
+							<label for="cardNumber">Número de tarjeta</label>
+							<input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required>
+						</div>
+						<div class="form-row">
+							<div class="form-group">
+								<label for="expiry">Fecha expiración</label>
+								<input type="text" id="expiry" placeholder="MM/AA" required>
+							</div>
+							<div class="form-group">
+								<label for="cvv">CVV</label>
+								<input type="text" id="cvv" placeholder="123" required>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="cardHolder">Titular de la tarjeta</label>
+							<input type="text" id="cardHolder" placeholder="Nombre como aparece en la tarjeta" required>
+						</div>
+						<button type="submit" class="btn-pay">Pagar ahora</button>
+					</form>
+				</div>
+			</div>
+
+			<!-- Mensaje de éxito -->
+			<div id="successModal" class="modal hidden">
+				<div class="modal-content success">
+					<span class="close" id="closeSuccess">&times;</span>
+					<h2>✅ ¡Pago exitoso!</h2>
+					<p>Tu pedido ha sido procesado. Recibirás un correo de confirmación.</p>
+				</div>
+			</div>
 		</main>
 		<Footer />
+
+		<!-- Estilos y lógica del cliente -->
+		<style is:global>
+			/* Reset básico y estilos generales */
+			body {
+				font-family: system-ui, -apple-system, sans-serif;
+				margin: 0;
+				padding: 0;
+				background: #f8f9fa;
+				color: #212529;
+			}
+			main {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 2rem 1rem;
+			}
+			.hero {
+				text-align: center;
+				margin-bottom: 3rem;
+			}
+			.hero h1 {
+				font-size: 2.5rem;
+				margin-bottom: 0.5rem;
+			}
+			.hero p {
+				font-size: 1.2rem;
+				color: #6c757d;
+			}
+			.products h2 {
+				font-size: 2rem;
+				margin-bottom: 1.5rem;
+				text-align: center;
+			}
+			.product-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+				gap: 2rem;
+				margin-bottom: 3rem;
+			}
+			.product-card {
+				background: white;
+				border-radius: 12px;
+				box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+				padding: 1.5rem;
+				text-align: center;
+				transition: transform 0.2s;
+			}
+			.product-card:hover {
+				transform: translateY(-5px);
+			}
+			.product-card img {
+				width: 100%;
+				height: 180px;
+				object-fit: cover;
+				border-radius: 8px;
+				background: #e9ecef;
+			}
+			.product-card h3 {
+				margin: 0.75rem 0 0.25rem;
+				font-size: 1.25rem;
+			}
+			.product-card .price {
+				font-weight: bold;
+				color: #2b8a3e;
+				font-size: 1.2rem;
+			}
+			.product-card button {
+				margin-top: 0.75rem;
+				background: #0d6efd;
+				color: white;
+				border: none;
+				padding: 0.5rem 1.2rem;
+				border-radius: 30px;
+				cursor: pointer;
+				font-weight: 600;
+				transition: background 0.2s;
+			}
+			.product-card button:hover {
+				background: #0b5ed7;
+			}
+			.cart-section {
+				text-align: center;
+				margin: 2rem 0;
+			}
+			.btn-cart, .btn-pay {
+				background: #198754;
+				color: white;
+				border: none;
+				padding: 0.75rem 2rem;
+				border-radius: 30px;
+				font-size: 1rem;
+				font-weight: 600;
+				cursor: pointer;
+				transition: background 0.2s;
+			}
+			.btn-cart:hover, .btn-pay:hover {
+				background: #157347;
+			}
+			.btn-pay {
+				background: #0d6efd;
+			}
+			.btn-pay:hover {
+				background: #0b5ed7;
+			}
+			/* Modales */
+			.modal {
+				display: none; /* hidden por defecto, se muestra con JS */
+				position: fixed;
+				z-index: 1000;
+				left: 0;
+				top: 0;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0,0,0,0.5);
+				align-items: center;
+				justify-content: center;
+			}
+			.modal.hidden {
+				display: none;
+			}
+			.modal:not(.hidden) {
+				display: flex;
+			}
+			.modal-content {
+				background: white;
+				padding: 2rem;
+				border-radius: 16px;
+				max-width: 500px;
+				width: 90%;
+				max-height: 90vh;
+				overflow-y: auto;
+				position: relative;
+				box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+			}
+			.modal-content.success {
+				text-align: center;
+			}
+			.close {
+				position: absolute;
+				top: 1rem;
+				right: 1.5rem;
+				font-size: 1.8rem;
+				cursor: pointer;
+				color: #adb5bd;
+			}
+			.close:hover {
+				color: #212529;
+			}
+			#cartItems {
+				list-style: none;
+				padding: 0;
+				margin: 1rem 0;
+			}
+			#cartItems li {
+				display: flex;
+				justify-content: space-between;
+				padding: 0.5rem 0;
+				border-bottom: 1px solid #e9ecef;
+			}
+			.form-group {
+				margin-bottom: 1rem;
+			}
+			.form-group label {
+				display: block;
+				font-weight: 600;
+				margin-bottom: 0.25rem;
+			}
+			.form-group input {
+				width: 100%;
+				padding: 0.6rem;
+				border: 1px solid #ced4da;
+				border-radius: 8px;
+				font-size: 1rem;
+				box-sizing: border-box;
+			}
+			.form-row {
+				display: flex;
+				gap: 1rem;
+			}
+			.form-row .form-group {
+				flex: 1;
+			}
+			@media (max-width: 600px) {
+				.form-row {
+					flex-direction: column;
+				}
+				.modal-content {
+					padding: 1.5rem;
+				}
+			}
+		</style>
+
+		<script>
+			// Datos de productos (simulados)
+			const products = [
+				{ id: 1, name: 'Camiseta Squirrel', price: 19.99, image: 'https://picsum.photos/seed/squirrel1/200/200' },
+				{ id: 2, name: 'Taza Ardilla', price: 12.50, image: 'https://picsum.photos/seed/squirrel2/200/200' },
+				{ id: 3, name: 'Gorra Forest', price: 24.00, image: 'https://picsum.photos/seed/squirrel3/200/200' },
+				{ id: 4, name: 'Bolsa ecológica', price: 8.75, image: 'https://picsum.photos/seed/squirrel4/200/200' },
+			];
+
+			// Estado del carrito
+			let cart = [];
+
+			// DOM elements
+			const productGrid = document.getElementById('productGrid');
+			const cartModal = document.getElementById('cartModal');
+			const paymentModal = document.getElementById('paymentModal');
+			const successModal = document.getElementById('successModal');
+			const cartItems = document.getElementById('cartItems');
+			const cartTotal = document.getElementById('cartTotal');
+			const cartCount = document.getElementById('cartCount');
+			const viewCartBtn = document.getElementById('viewCartBtn');
+			const checkoutBtn = document.getElementById('checkoutBtn');
+			const closeCart = document.getElementById('closeCart');
+			const closePayment = document.getElementById('closePayment');
+			const closeSuccess = document.getElementById('closeSuccess');
+			const paymentForm = document.getElementById('paymentForm');
+
+			// Renderizar productos
+			function renderProducts() {
+				productGrid.innerHTML = products.map(p => `
+					<div class="product-card">
+						<img src="${p.image}" alt="${p.name}" loading="lazy">
+						<h3>${p.name}</h3>
+						<div class="price">$${p.price.toFixed(2)}</div>
+						<button data-id="${p.id}">Añadir al carrito</button>
+					</div>
+				`).join('');
+
+				// Event listeners para botones "Añadir"
+				productGrid.querySelectorAll('button').forEach(btn => {
+					btn.addEventListener('click', (e) => {
+						const id = parseInt(btn.dataset.id);
+						const product = products.find(p => p.id === id);
+						if (product) {
+							addToCart(product);
+						}
+					});
+				});
+			}
+
+			// Añadir al carrito
+			function addToCart(product) {
+				const existing = cart.find(item => item.id === product.id);
+				if (existing) {
+					existing.quantity += 1;
+				} else {
+					cart.push({ ...product, quantity: 1 });
+				}
+				updateCartUI();
+				// Feedback visual breve
+				const btn = productGrid.querySelector(`button[data-id="${product.id}"]`);
+				if (btn) {
+					btn.textContent = '✅ Añadido';
+					setTimeout(() => {
+						btn.textContent = 'Añadir al carrito';
+					}, 1000);
+				}
+			}
+
+			// Actualizar UI del carrito (contador, lista, total)
+			function updateCartUI() {
+				const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+				cartCount.textContent = totalItems;
+				if (cart.length === 0) {
+					cartItems.innerHTML = '<li style="text-align:center; color:#6c757d;">El carrito está vacío</li>';
+					cartTotal.textContent = '0.00';
+				} else {
+					cartItems.innerHTML = cart.map(item => `
+						<li>
+							<span>${item.name} x${item.quantity}</span>
+							<span>$${(item.price * item.quantity).toFixed(2)}</span>
+						</li>
+					`).join('');
+					const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+					cartTotal.textContent = total.toFixed(2);
+				}
+			}
+
+			// Mostrar/ocultar modales
+			function openModal(modal) {
+				modal.classList.remove('hidden');
+			}
+			function closeModal(modal) {
+				modal.classList.add('hidden');
+			}
+
+			// Eventos de modales
+			viewCartBtn.addEventListener('click', () => {
+				updateCartUI();
+				openModal(cartModal);
+			});
+
+			closeCart.addEventListener('click', () => closeModal(cartModal));
+
+			checkoutBtn.addEventListener('click', () => {
+				if (cart.length === 0) {
+					alert('El carrito está vacío. Agrega productos primero.');
+					return;
+				}
+				closeModal(cartModal);
+				openModal(paymentModal);
+			});
+
+			closePayment.addEventListener('click', () => closeModal(paymentModal));
+			closeSuccess.addEventListener('click', () => closeModal(successModal));
+
+			// Cerrar modales al hacer clic fuera del contenido
+			[cartModal, paymentModal, successModal].forEach(modal => {
+				modal.addEventListener('click', (e) => {
+					if (e.target === modal) closeModal(modal);
+				});
+			});
+
+			// Manejo del formulario de pago
+			paymentForm.addEventListener('submit', (e) => {
+				e.preventDefault();
+
+				// Aquí es donde integrarás tu API de pago
+				// Por ahora, simulamos el envío
+				const cardNumber = document.getElementById('cardNumber').value.trim();
+				const expiry = document.getElementById('expiry').value.trim();
+				const cvv = document.getElementById('cvv').value.trim();
+				const cardHolder = document.getElementById('cardHolder').value.trim();
+
+				// Validación básica (para muestra)
+				if (!cardNumber || !expiry || !cvv || !cardHolder) {
+					alert('Por favor, completa todos los campos.');
+					return;
+				}
+
+				// Simular llamado a API
+				console.log('Enviando datos de pago:', { cardNumber, expiry, cvv, cardHolder, cart });
+
+				// Aquí iría tu fetch a tu endpoint:
+				// fetch('/api/pay', { method: 'POST', body: JSON.stringify({ ... }) })
+
+				// Mostrar éxito y limpiar carrito
+				closeModal(paymentModal);
+				openModal(successModal);
+				cart = [];
+				updateCartUI();
+
+				// Resetear formulario
+				paymentForm.reset();
+			});
+
+			// Inicializar
+			renderProducts();
+			updateCartUI();
+		</script>
 	</body>
 </html>
