@@ -56,11 +56,12 @@ const storeDescription = 'Tienda online de productos exclusivos para ardillas mo
 								<label for="expiry">Fecha expiración</label>
 								<input type="text" id="expiry" placeholder="MM/AA" required>
 							</div>
+							
 							<div class="form-group">
-								<label for="cvv">CVV</label>
-								<inputmode="numeric" id="cvv" placeholder="123" required>
+ 								<label for="cvv">CVV</label>
+  								<input type="text" id="cvv" placeholder="123" required inputmode="numeric" pattern="[0-9]{3,4}" maxlength="4">
 							</div>
-						</div>
+						
 						<div class="form-group">
 							<label for="cardHolder">Titular de la tarjeta</label>
 							<input type="text" id="cardHolder" placeholder="Nombre como aparece en la tarjeta" required>
@@ -298,6 +299,8 @@ const storeDescription = 'Tienda online de productos exclusivos para ardillas mo
 			const closePayment = document.getElementById('closePayment');
 			const closeSuccess = document.getElementById('closeSuccess');
 			const paymentForm = document.getElementById('paymentForm');
+
+			const cvv = document.getElementById('cvv');
 
 			// Renderizar productos
 			function renderProducts() {
